@@ -1,5 +1,7 @@
 package org.example.secureplatform.common;
 
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.unit.DataUnit;
 import cn.hutool.core.util.StrUtil;
@@ -17,11 +19,14 @@ import oshi.software.os.FileSystem;
 import oshi.software.os.OSFileStore;
 import oshi.software.os.OperatingSystem;
 
+import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -312,7 +317,16 @@ public class SystemInfoUtil {
         } catch (UnknownHostException e) {
             System.out.println("主机信息获取失败");
         }
-        //系统启动时间
+        // 系统启动时间
+        String bootTime = getBootTime();
+        String runTime = "";
+        DateTime start = null;
+        if (StrUtil.isNotEmpty(bootTime)) {
+            start = DateUtil.parse(bootTime, DatePattern.NORM_DATETIME_PATTERN);
+            runTime = DateUtil.formatBetween(start, DateUtil.date());
+        }
+        osInfo.setStartTime(start);
+        osInfo.setBootTime(runTime);
         return osInfo;
     }
 
@@ -328,6 +342,8 @@ public class SystemInfoUtil {
         System.out.println("主机host："+ osInfo.getHost());
         System.out.println("主机名称："+ osInfo.getHostName());
 
+        System.out.println("系统启动时间："+ osInfo.getStartTime());
+        System.out.println("系统正常运行时长："+ osInfo.getBootTime());
         System.out.println("-----------运行时信息-----------");
         OSRuntimeInfo osRuntimeInfo = getOSRuntimeInfo();
         //1.CPU信息
@@ -376,6 +392,42 @@ public class SystemInfoUtil {
             System.out.println("上传速度↑："+String.format("%.1f%s", send, "Kbps"));
             System.out.println("下载速度↓："+String.format("%.1f%s", accept, "Kbps"));
         }
+    }
+
+    // 获取系统启动时间
+    public static String getBootTime() {
+        String uptime = "";
+        String os = System.getProperty("os.name").toLowerCase();
+        try {
+            if (os.contains("win")) {
+                Process uptimeProc = Runtime.getRuntime().exec("net statistics Workstation");
+                BufferedReader in = new BufferedReader(new InputStreamReader(uptimeProc.getInputStream(), Charset.forName("GBK")));
+                String line;
+                while ((line = in.readLine()) != null) {
+                    if (line.startsWith("Statistics since")) {
+                        SimpleDateFormat format = new SimpleDateFormat("'Statistics since' yyyy/MM/dd HH:mm:ss");
+                        Date bootTime = format.parse(line);
+                        uptime = DateUtil.format(bootTime, DatePattern.NORM_DATETIME_PATTERN);
+                        break;
+                    } else if (line.startsWith("统计数据开始于")) {
+                        SimpleDateFormat format = new SimpleDateFormat("'统计数据开始于' yyyy/MM/dd HH:mm:ss");
+                        Date bootTime = format.parse(line);
+                        uptime = DateUtil.format(bootTime, DatePattern.NORM_DATETIME_PATTERN);
+                        break;
+                    }
+                }
+            } else if (os.contains("mac") || os.contains("nix") || os.contains("nux") || os.contains("aix")) {
+                Process uptimeProc = Runtime.getRuntime().exec("uptime -s");
+                BufferedReader in = new BufferedReader(new InputStreamReader(uptimeProc.getInputStream()));
+                String line = in.readLine();
+                if (line != null) {
+                    uptime = line;
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("获取系统启动时间异常" + e.getMessage());
+        }
+        return uptime;
     }
 
     // 格式化输出百分比

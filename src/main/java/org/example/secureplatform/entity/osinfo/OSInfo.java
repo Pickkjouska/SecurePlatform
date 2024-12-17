@@ -1,5 +1,6 @@
 package org.example.secureplatform.entity.osinfo;
 
+import cn.hutool.core.date.DateTime;
 import lombok.Data;
 
 // 系统信息
@@ -20,13 +21,16 @@ public class OSInfo {
     // cpu核心数
     private int cpuCount;
 
-     // 主机host
+    // 主机host
     private String host;
 
-     // 主机名称
+    // 主机名称
     private String hostName;
 
-     // 系统启动时间
+    //系统启动时间
+    private DateTime startTime;
+
+    // 系统持续时间
     private String bootTime;
 
 }
