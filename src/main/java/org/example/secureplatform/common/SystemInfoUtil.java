@@ -195,9 +195,8 @@ public class SystemInfoUtil {
     public static List<NetworkIF> getNetwork() {
         List<NetworkIF> list = new ArrayList<>();
         List<NetworkIF> networkIFs = abstractionLayer.getNetworkIFs();
-        System.out.println(networkIFs);
         for (NetworkIF networkIF : networkIFs) {
-            if (!networkIF.isKnownVmMacAddr()) {
+//            if (!networkIF.isKnownVmMacAddr()) {
                 if (networkIF.getMacaddr() != null && networkIF.getIPv4addr().length > 0
                         && networkIF.getIPv6addr().length > 0) {
                     if (!networkInfoMap.containsKey(networkIF.getMacaddr())) {
@@ -207,7 +206,7 @@ public class SystemInfoUtil {
                     }
                     list.add(networkIF);
                 }
-            }
+//            }
         }
         return list;
     }

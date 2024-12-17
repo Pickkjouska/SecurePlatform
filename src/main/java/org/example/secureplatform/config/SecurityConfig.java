@@ -66,7 +66,7 @@ public class SecurityConfig {
                 .sessionManagement(sessionManagementConfigurer ->
                         sessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/login", "/register", "/system/**").permitAll() // 允许匿名访问
+                        .requestMatchers("/login", "/register", "/system/**", "/public/**").permitAll() // 允许匿名访问
                         .anyRequest()
                         .authenticated())// 其他路径都需要认证
 

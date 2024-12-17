@@ -25,7 +25,7 @@ public class SystemInfoController {
         return systemInfoService.SystemInfo();
     }
 
-    @GetMapping
+    @GetMapping("/test")
     public ResponseResult<List<NetworkIF>> sad(){
         return new ResponseResult<>(200, "sd", SystemInfoUtil.getNetwork());
     }
