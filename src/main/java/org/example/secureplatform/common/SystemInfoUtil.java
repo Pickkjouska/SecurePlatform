@@ -192,9 +192,10 @@ public class SystemInfoUtil {
     }
 
     // 获取网络接口NetworkIF对象列表
-    private static List<NetworkIF> getNetwork() {
+    public static List<NetworkIF> getNetwork() {
         List<NetworkIF> list = new ArrayList<>();
         List<NetworkIF> networkIFs = abstractionLayer.getNetworkIFs();
+        System.out.println(networkIFs);
         for (NetworkIF networkIF : networkIFs) {
             if (!networkIF.isKnownVmMacAddr()) {
                 if (networkIF.getMacaddr() != null && networkIF.getIPv4addr().length > 0
