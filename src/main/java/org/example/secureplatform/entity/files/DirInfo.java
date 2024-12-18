@@ -16,6 +16,10 @@ public class DirInfo {
     private String user;
     // 组
     private String group;
+    // 文本
+    private String content;
+    // 文本类型
+    private String mimeType;
     // 大小
     private String size;
     // 是否文件夹

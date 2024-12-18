@@ -4,9 +4,11 @@ import org.apache.tomcat.jni.FileInfo;
 import org.example.secureplatform.entity.files.DirInfo;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.*;
 import java.util.Arrays;
 import java.util.List;
@@ -47,7 +49,7 @@ public class DirInfoUtil {
     }
 
 
-    public static DirInfo getFileInfo(Path dirpath) {
+    public static DirInfo getDirInfo(Path dirpath) {
         File folder = dirpath.toFile();
         DirInfo dirinfo = new DirInfo();
 
@@ -86,13 +88,92 @@ public class DirInfoUtil {
             // 判断是否为文件夹
             dirinfo.setIsDir(folder.isDirectory() ? "true" : "false");
 
-
         } catch (Exception e){
             e.printStackTrace();
         }
         return dirinfo;
     }
+
+    // 获取文件信息
+    public static DirInfo getFileInfo(Path dirpath) {
+        DirInfo dirinfo = getDirInfo(dirpath);
+        try{
+            StringBuilder content = new StringBuilder();
+            String mimeType = Files.probeContentType(dirpath);
+            List<String> lines = Files.readAllLines(dirpath);
+            for (String line : lines) {
+                content.append(line).append("\n");
+            }
+            dirinfo.setMimeType(mimeType);
+            dirinfo.setContent(content.toString());
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return dirinfo;
+    }
+
+    // 创建文件或目录
+    public static String Createfile(Path dirpath, String isDir) throws IOException {
+        String response = "";
+        if (isDir.equals("true")) {
+            if (!Files.exists(dirpath)) {
+                // 创建空目录
+                Files.createDirectories(dirpath);
+                response = "目录已创建";
+            } else {
+                response = "目录已经存在";
+            }
+        } else {
+            if (!Files.exists(dirpath)) {
+                // 创建空文件
+                Files.createFile(dirpath);
+                response = "文件已创建";
+            } else {
+                response = "文件已经存在";
+            }
+        }
+        return response;
+    }
+
+    // 删除文件
+    public static void DeleteFile(File folder) throws IOException {
+        folder.delete();
+    }
+
+    // 删除目录
+    public static void DeleteDir(File folder) throws IOException {
+        for (File file : Objects.requireNonNull(folder.listFiles())) {
+            if (file.isDirectory()) {
+                DeleteDir(file);
+            } else {
+                file.delete();
+            }
+        }
+        folder.delete();
+    }
+
+    // 保存文件
+    public static void SaveFile(Path dirpath, String content) throws IOException {
+        Files.write(dirpath, content.getBytes(), StandardOpenOption.CREATE);
+    }
+
+    // 重命名
+    public static String RenameFile(Path dirpath, String oldName, String newName) throws IOException {
+        String response = "";
+        if (Objects.equals(oldName, newName)) {
+            response = "文件名重复";
+        } else {
+            Files.move(dirpath, Paths.get(newName));
+            response = "修改成功";
+        }
+        return response;
+    }
+
     public static void main(String[] args) throws Exception {
-        System.out.println(getFileInfo(Path.of("D:/springproject/SecurePlatform")));
+//        System.out.println(getDirInfo(Path.of("D:/springproject/SecurePlatform")));
+//        System.out.println(getFileInfo(Path.of("D:/springproject/SecurePlatform/text.txt")));
+//        Createfile(Path.of("D:/springproject/SecurePlatform/ddir"), "false");
+        File file = Path.of("D:/springproject/SecurePlatform/ddir").toFile();
+        DeleteDir(file);
     }
 }
