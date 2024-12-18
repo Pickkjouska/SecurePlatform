@@ -1,6 +1,6 @@
 package org.example.secureplatform.service.Impl;
 
-import org.example.secureplatform.common.JwtUtil;
+import org.example.secureplatform.common.util.JwtUtil;
 import org.example.secureplatform.common.RedisCache;
 import org.example.secureplatform.common.ResponseResult;
 import org.example.secureplatform.entity.LoginUser;

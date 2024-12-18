@@ -1,7 +1,7 @@
 package org.example.secureplatform.controller;
 
 import org.example.secureplatform.common.ResponseResult;
-import org.example.secureplatform.common.SystemInfoUtil;
+import org.example.secureplatform.common.util.SystemInfoUtil;
 import org.example.secureplatform.entity.osinfo.OSInfo;
 import org.example.secureplatform.entity.osinfo.OSRuntimeInfo;
 import org.example.secureplatform.service.SystemInfoService;

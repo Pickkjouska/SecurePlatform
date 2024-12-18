@@ -1,16 +1,16 @@
-package org.example.secureplatform.common;
+package org.example.secureplatform.common.util;
 
-import org.apache.tomcat.jni.FileInfo;
+import cn.hutool.core.io.FileUtil;
+import jakarta.servlet.http.HttpServletResponse;
 import org.example.secureplatform.entity.files.DirInfo;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.*;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -169,11 +169,73 @@ public class DirInfoUtil {
         return response;
     }
 
+    // 文件上传
+    public static String uploadFile(String dirpath, MultipartFile file) throws IOException {
+        String response = "上传成功";
+        // 文件的原始名称
+        String originalFilename = file.getOriginalFilename();
+        // 文件的主名称
+        String mainName = FileUtil.mainName(originalFilename);
+        // 文件的扩展名(后缀)
+        String extName = FileUtil.extName(originalFilename);
+        if (FileUtil.exist(dirpath + File.separator + originalFilename)){
+            originalFilename = System.currentTimeMillis() + "-" + mainName + "." + extName;
+        }
+        File saveFile = new File(dirpath + File.separator + originalFilename);
+        file.transferTo(saveFile);
+        return response;
+    }
+
+    public static String downLoad(String filename, HttpServletResponse response){
+        File file = new File(filename);
+        String extName = FileUtil.extName(file);
+        if (!file.exists() || !file.isFile()) {
+            // 如果文件不存在，返回一个适当的错误响应
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        }
+        try (InputStream inputStream = new FileInputStream(file);
+             OutputStream outputStream = response.getOutputStream()) {
+            // 设置响应头：告知浏览器这是一个文件下载请求
+            switch (extName) {
+                case "pdf":
+                    response.setContentType("application/pdf");
+                    break;
+                case "jpg":
+                case "jpeg":
+                    response.setContentType("image/jpeg");
+                    break;
+                case "png":
+                    response.setContentType("image/png");
+                    break;
+                case "txt":
+                    response.setContentType("text/plain");
+                    break;
+                default:
+                    response.setContentType("application/octet-stream");
+            }
+            response.setHeader("Content-Disposition", "attachment; filename=\"" + file.getName() + "\"");
+            // 设置响应文件的长度
+            response.setContentLength((int) file.length());
+            // 读取文件并写入到响应流
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+            // 刷新流，确保所有数据都已写入响应
+            outputStream.flush();
+        } catch (IOException e) {
+            // 如果发生异常，可以返回错误信息
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+        return null;
+    }
+
     public static void main(String[] args) throws Exception {
 //        System.out.println(getDirInfo(Path.of("D:/springproject/SecurePlatform")));
 //        System.out.println(getFileInfo(Path.of("D:/springproject/SecurePlatform/text.txt")));
 //        Createfile(Path.of("D:/springproject/SecurePlatform/ddir"), "false");
-        File file = Path.of("D:/springproject/SecurePlatform/ddir").toFile();
-        DeleteDir(file);
+//        File file = Path.of("D:/springproject/SecurePlatform/ddir").toFile();
+//        DeleteDir(file);
     }
 }

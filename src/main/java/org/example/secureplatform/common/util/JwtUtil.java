@@ -1,4 +1,4 @@
-package org.example.secureplatform.common;
+package org.example.secureplatform.common.util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;

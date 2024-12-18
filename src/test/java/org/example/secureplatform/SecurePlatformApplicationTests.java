@@ -2,7 +2,7 @@ package org.example.secureplatform;
 
 import org.example.secureplatform.common.JwtAuthenticationTokenFilter;
 import org.example.secureplatform.common.RedisCache;
-import org.example.secureplatform.common.SystemInfoUtil;
+import org.example.secureplatform.common.util.SystemInfoUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
