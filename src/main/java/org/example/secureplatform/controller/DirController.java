@@ -1,14 +1,13 @@
 package org.example.secureplatform.controller;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.example.secureplatform.common.ResponseResult;
 import org.example.secureplatform.entity.files.DirInfo;
 import org.example.secureplatform.entity.files.DirRequest;
 import org.example.secureplatform.service.DirService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
@@ -43,8 +42,18 @@ public class DirController {
         return dirService.save(dirRequest);
     }
 
-    @PostMapping("rename")
+    @PostMapping("/rename")
     public ResponseResult<String> rename(@RequestBody DirRequest dirRequest) throws IOException {
         return dirService.rename(dirRequest);
+    }
+
+    @PostMapping("/upload")
+    public ResponseResult<String> upload(@RequestBody DirRequest dirRequest, MultipartFile file) throws IOException {
+        return dirService.upload(dirRequest, file);
+    }
+
+    @GetMapping("/download")
+    public ResponseResult<String> download(@RequestParam String filename, HttpServletResponse response) {
+        return dirService.download(filename, response);
     }
 }

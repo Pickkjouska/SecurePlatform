@@ -1,24 +1,18 @@
 package org.example.secureplatform.service.Impl;
 
-import org.example.secureplatform.common.DirInfoUtil;
+import jakarta.servlet.http.HttpServletResponse;
+import org.example.secureplatform.common.util.DirInfoUtil;
 import org.example.secureplatform.common.ResponseResult;
 import org.example.secureplatform.entity.files.DirInfo;
 import org.example.secureplatform.entity.files.DirRequest;
 import org.example.secureplatform.service.DirService;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
+import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.FileOwnerAttributeView;
-import java.nio.file.attribute.GroupPrincipal;
-import java.nio.file.attribute.PosixFileAttributes;
-import java.nio.file.attribute.UserPrincipal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -88,6 +82,18 @@ public class DirServiceImpl extends DirService {
         Path dirpath = Paths.get(dirRequest.getPath()).normalize();
         String data =  DirInfoUtil.RenameFile(dirpath, dirRequest.getOldName(), dirRequest.getNewName());
 
+        return new ResponseResult<>(200, "获取成功", data);
+    }
+
+    @Override
+    public ResponseResult<String> upload(DirRequest dirRequest, MultipartFile file) throws IOException {
+        String data = DirInfoUtil.uploadFile(dirRequest.getPath(), file);
+        return new ResponseResult<>(200, "获取成功", data);
+    }
+
+    @Override
+    public ResponseResult<String> download(String filename, HttpServletResponse response) {
+        String data = DirInfoUtil.downLoad(filename, response);
         return new ResponseResult<>(200, "获取成功", data);
     }
 }
