@@ -16,6 +16,8 @@ public class DirRequest {
     private String sortBy;
     // 排序顺序
     private String sortOrder;
+    // 总共多少
+    private String pageTotal;
     // 页数
     private int page;
     // 页数大小
@@ -24,4 +26,12 @@ public class DirRequest {
     private String oldName;
     // 新名字
     private String newName;
+    // 权限
+    private String permission;
+    // 是否为软链接
+    private String isLink;
+    // 连接类型
+    private String LinkType;
+    // 链接地址
+    private String Link;
 }

@@ -14,7 +14,7 @@ import oshi.hardware.NetworkIF;
 import java.util.List;
 
 @RestController
-@RequestMapping("/system")
+@RequestMapping("/public/system")
 public class SystemInfoController {
 
     @Autowired
@@ -25,9 +25,9 @@ public class SystemInfoController {
         return systemInfoService.SystemInfo();
     }
 
-    @GetMapping("/test")
+    @GetMapping("/network")
     public ResponseResult<List<NetworkIF>> sad(){
-        return new ResponseResult<>(200, "sd", SystemInfoUtil.getNetwork());
+        return new ResponseResult<>(200, "获取成功", SystemInfoUtil.getNetwork());
     }
 
     @GetMapping("/osruntime")

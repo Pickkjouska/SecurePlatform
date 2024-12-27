@@ -441,7 +441,7 @@ public class SystemInfoUtil {
             return "0B";
         } else {
             int digitGroups = Math.min(DataUnit.UNIT_NAMES.length - 1, (int) (Math.log10((double) size) / Math.log10(1024.0D)));
-            return (new DecimalFormat("#,##0.##")).format((double) size / Math.pow(1024.0D, (double) digitGroups)) + DataUnit.UNIT_NAMES[digitGroups];
+            return (new DecimalFormat("#,##0.##")).format((double) size / Math.pow(1024.0D, (double) digitGroups));
         }
     }
 }

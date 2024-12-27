@@ -36,5 +36,7 @@ public class DirInfo {
     private String updateTime;
     // 下一级目录
     private List<DirInfo> item;
+    // item总共
+    private int itemTotal;
 
 }

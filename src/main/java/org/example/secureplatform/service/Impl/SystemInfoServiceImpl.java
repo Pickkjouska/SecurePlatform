@@ -18,7 +18,6 @@ public class SystemInfoServiceImpl extends SystemInfoService {
     @Override
     public ResponseResult<OSRuntimeInfo> SystemRuntime() throws InterruptedException {
         OSRuntimeInfo osRuntimeInfo;
-
         return new ResponseResult<>(200, "获取成功", SystemInfoUtil.getOSRuntimeInfo());
     }
 }

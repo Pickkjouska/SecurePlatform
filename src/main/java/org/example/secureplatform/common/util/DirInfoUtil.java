@@ -3,9 +3,11 @@ package org.example.secureplatform.common.util;
 import cn.hutool.core.io.FileUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.secureplatform.entity.files.DirInfo;
+import org.example.secureplatform.entity.files.DirRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -63,8 +65,8 @@ public class DirInfoUtil {
             UserPrincipal userPrincipal = ownerAttr.getOwner();
             dirinfo.setUser(userPrincipal.getName());
             // Linux下获取文件组信息
-//            GroupPrincipal group = Files.readAttributes(dirpath, PosixFileAttributes.class).group();
-//            dirinfo.setGroup(group.getName());
+            GroupPrincipal group = Files.readAttributes(dirpath, PosixFileAttributes.class).group();
+            dirinfo.setGroup(group.getName());
             dirinfo.setGroup("hhh");
             // 获取文件大小
             dirinfo.setSize(String.valueOf(Files.size(dirpath)));
@@ -75,12 +77,12 @@ public class DirInfoUtil {
             /**
              * 链接路径
             **/
-//            if (Objects.equals(dirinfo.getIsSymlink(), "true")) {
-//                dirinfo.setLinkPath(Files.readSymbolicLink(dirpath));
-//            }
-            //权限等级
-//            PosixFileAttributes attrs = Files.readAttributes(dirpath, PosixFileAttributes.class);
-//            dirinfo.setMode(toOctalMode(attrs.permissions()));
+            if (Objects.equals(dirinfo.getIsSymlink(), "true")) {
+                dirinfo.setLinkPath(Files.readSymbolicLink(dirpath));
+            }
+//            权限等级
+            PosixFileAttributes attrs = Files.readAttributes(dirpath, PosixFileAttributes.class);
+            dirinfo.setMode(toOctalMode(attrs.permissions()));
 
             dirinfo.setMode("0700");
             // 获取文件的最后修改时间
@@ -113,12 +115,17 @@ public class DirInfoUtil {
     }
 
     // 创建文件或目录
-    public static String Createfile(Path dirpath, String isDir) throws IOException {
+    public static String Createfile(DirRequest dirRequest) throws IOException {
         String response = "";
+        String isDir = dirRequest.getIsDir();
+        Path dirpath = Paths.get(dirRequest.getPath()).normalize();
+        String isLink = dirRequest.getIsLink();
+        Set<PosixFilePermission> perms = PosixFilePermissions.fromString(convertOctalToPosixPermission(dirRequest.getPermission()));
+        FileAttribute<Set<PosixFilePermission>> fileAttributes = PosixFilePermissions.asFileAttribute(perms);
         if (isDir.equals("true")) {
             if (!Files.exists(dirpath)) {
                 // 创建空目录
-                Files.createDirectories(dirpath);
+                Files.createDirectories(dirpath, fileAttributes);
                 response = "目录已创建";
             } else {
                 response = "目录已经存在";
@@ -126,13 +133,25 @@ public class DirInfoUtil {
         } else {
             if (!Files.exists(dirpath)) {
                 // 创建空文件
-                Files.createFile(dirpath);
+                Files.createFile(dirpath, fileAttributes);
+                if (Objects.equals(isLink, "true")) {
+                    createLink(dirpath, Paths.get(dirRequest.getLink()), dirRequest.getLinkType());
+                }
                 response = "文件已创建";
             } else {
                 response = "文件已经存在";
             }
         }
         return response;
+    }
+    public  static void createLink(Path dirpath, Path Link, String LinkType) throws IOException {
+        if (Objects.equals(LinkType, "SymbolicLink")) {
+            Files.createSymbolicLink(dirpath, Link);
+        } else if (Objects.equals(LinkType, "Link")) {
+            Files.createLink(dirpath, Link);
+        } else {
+            System.out.println("错误");
+        }
     }
 
     // 删除文件
@@ -154,7 +173,14 @@ public class DirInfoUtil {
 
     // 保存文件
     public static void SaveFile(Path dirpath, String content) throws IOException {
-        Files.write(dirpath, content.getBytes(), StandardOpenOption.CREATE);
+        try {
+            Files.write(dirpath, content.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            System.out.println("文件保存成功: " + dirpath);
+        } catch (IOException e) {
+            // 处理写入文件时的异常
+            System.err.println("保存文件时发生错误: " + e.getMessage());
+            throw e; // 可以选择重新抛出异常，或者处理它
+        }
     }
 
     // 重命名
@@ -230,6 +256,30 @@ public class DirInfoUtil {
         }
         return null;
     }
+    public static String convertOctalToPosixPermission(String octalPermission) {
+        // 验证传入的字符串是否为有效的八进制权限（3-4 位的数字，且只能包含0-7）
+        if (!octalPermission.matches("[0-7]{3,4}")) {
+            throw new IllegalArgumentException("Permission must be a 3 or 4-digit octal string (e.g., 0755 or 644).");
+        }
+
+        // 转换为整数（八进制）
+        int permission = Integer.parseInt(octalPermission, 8);
+
+        // 计算 POSIX 权限字符串
+        String owner = getPermissionString((permission >> 6) & 7); // 所有者权限
+        String group = getPermissionString((permission >> 3) & 7); // 组权限
+        String others = getPermissionString(permission & 7);       // 其他用户权限
+
+        return owner + group + others;
+    }
+
+    private static String getPermissionString(int permission) {
+        StringBuilder permissionString = new StringBuilder();
+        permissionString.append((permission & 4) != 0 ? "r" : "-"); // 读权限
+        permissionString.append((permission & 2) != 0 ? "w" : "-"); // 写权限
+        permissionString.append((permission & 1) != 0 ? "x" : "-"); // 执行权限
+        return permissionString.toString();
+    }
 
     public static void main(String[] args) throws Exception {
 //        System.out.println(getDirInfo(Path.of("D:/springproject/SecurePlatform")));
@@ -237,5 +287,7 @@ public class DirInfoUtil {
 //        Createfile(Path.of("D:/springproject/SecurePlatform/ddir"), "false");
 //        File file = Path.of("D:/springproject/SecurePlatform/ddir").toFile();
 //        DeleteDir(file);
+            String posixPermission = convertOctalToPosixPermission("0710");
+            System.out.println(posixPermission);
     }
 }
