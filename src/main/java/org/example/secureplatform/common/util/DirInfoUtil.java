@@ -147,16 +147,16 @@ public class DirInfoUtil {
     }
 
     public  static void createLink(Path dirpath, Path Link, String linkType) throws IOException {
-        if ("SymbolicLink".equals(linkType)) {
+        if (Objects.equals(linkType, "SymbolicLink")) {
             Files.createSymbolicLink(dirpath, Link);
             System.out.println("Symbolic link created from " + dirpath + " to " + Link);
-        } else if ("Link".equals(linkType)) {
+        } else if (Objects.equals(linkType, "Link")) {
             Files.createLink(dirpath, Link);
             System.out.println("Link created from " + dirpath + " to " + Link);
         } else {
             System.out.println("错误");
+            System.out.println(linkType.equals("SymbolicLink"));
         }
-        ;
     }
 
     // 删除文件
