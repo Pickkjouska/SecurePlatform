@@ -135,7 +135,8 @@ public class DirInfoUtil {
                 // 创建空文件
                 Files.createFile(dirpath, fileAttributes);
                 if (Objects.equals(isLink, "true")) {
-                    createLink(dirpath, Paths.get(dirRequest.getLink()), dirRequest.getLinkType());
+                    Path target = Paths.get(dirRequest.getLinkPath());
+                    createLink(dirpath, target, dirRequest.getLinkType());
                 }
                 response = "文件已创建";
             } else {
@@ -144,14 +145,18 @@ public class DirInfoUtil {
         }
         return response;
     }
-    public  static void createLink(Path dirpath, Path Link, String LinkType) throws IOException {
-        if (Objects.equals(LinkType, "SymbolicLink")) {
+
+    public  static void createLink(Path dirpath, Path Link, String linkType) throws IOException {
+        if ("SymbolicLink".equals(linkType)) {
             Files.createSymbolicLink(dirpath, Link);
-        } else if (Objects.equals(LinkType, "Link")) {
+            System.out.println("Symbolic link created from " + dirpath + " to " + Link);
+        } else if ("Link".equals(linkType)) {
             Files.createLink(dirpath, Link);
+            System.out.println("Link created from " + dirpath + " to " + Link);
         } else {
             System.out.println("错误");
         }
+        ;
     }
 
     // 删除文件
@@ -266,20 +271,16 @@ public class DirInfoUtil {
         int permission = Integer.parseInt(octalPermission, 8);
 
         // 计算 POSIX 权限字符串
-        String owner = getPermissionString((permission >> 6) & 7); // 所有者权限
-        String group = getPermissionString((permission >> 3) & 7); // 组权限
-        String others = getPermissionString(permission & 7);       // 其他用户权限
+        StringBuilder sb = new StringBuilder();
+        String[] perms = {"---", "--x", "-w-", "-wx", "r--", "r-x", "rw-", "rwx"};
 
-        return owner + group + others;
+        sb.append(perms[(permission >> 6) & 7]) // Owner 权限
+                .append(perms[(permission >> 3) & 7]) // Group 权限
+                .append(perms[permission & 7]);       // Others 权限
+
+        return sb.toString();
     }
 
-    private static String getPermissionString(int permission) {
-        StringBuilder permissionString = new StringBuilder();
-        permissionString.append((permission & 4) != 0 ? "r" : "-"); // 读权限
-        permissionString.append((permission & 2) != 0 ? "w" : "-"); // 写权限
-        permissionString.append((permission & 1) != 0 ? "x" : "-"); // 执行权限
-        return permissionString.toString();
-    }
 
     public static void main(String[] args) throws Exception {
 //        System.out.println(getDirInfo(Path.of("D:/springproject/SecurePlatform")));
@@ -287,7 +288,8 @@ public class DirInfoUtil {
 //        Createfile(Path.of("D:/springproject/SecurePlatform/ddir"), "false");
 //        File file = Path.of("D:/springproject/SecurePlatform/ddir").toFile();
 //        DeleteDir(file);
-            String posixPermission = convertOctalToPosixPermission("0710");
-            System.out.println(posixPermission);
+        Path dirpath = Paths.get("D:/springproject/SecurePlatform/text/asd.txt");
+        Path das = Paths.get("D:/springproject/SecurePlatform/text/xxxxx.txt");
+        createLink(dirpath, das, "SymbolicLink");
     }
 }

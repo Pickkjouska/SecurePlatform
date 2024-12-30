@@ -33,5 +33,5 @@ public class DirRequest {
     // 连接类型
     private String LinkType;
     // 链接地址
-    private String Link;
+    private String linkPath;
 }
