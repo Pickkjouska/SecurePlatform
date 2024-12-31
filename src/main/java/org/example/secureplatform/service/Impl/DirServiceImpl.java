@@ -105,20 +105,22 @@ public class DirServiceImpl extends DirService {
     @Override
     public ResponseResult<String> rename(DirRequest dirRequest) throws IOException {
         Path dirpath = Paths.get(dirRequest.getPath()).normalize();
-        String data =  DirInfoUtil.RenameFile(dirpath, dirRequest.getOldName(), dirRequest.getNewName());
+        String data = DirInfoUtil.RenameFile(dirpath, dirRequest.getOldName(), dirRequest.getNewName());
 
         return new ResponseResult<>(200, "获取成功", data);
     }
 
     @Override
-    public ResponseResult<String> upload(DirRequest dirRequest, MultipartFile file) throws IOException {
-        String data = DirInfoUtil.uploadFile(dirRequest.getPath(), file);
+    public ResponseResult<String> upload(String path, MultipartFile file) throws IOException {
+        if (file.isEmpty()) {
+            return new ResponseResult<>(404, "文件为空，请选择文件上传！");
+        }
+        String data = DirInfoUtil.uploadFile(path, file);
         return new ResponseResult<>(200, "获取成功", data);
     }
 
     @Override
-    public ResponseResult<String> download(String filename, HttpServletResponse response) {
-        String data = DirInfoUtil.downLoad(filename, response);
-        return new ResponseResult<>(200, "获取成功", data);
+    public HttpServletResponse download(String filename, HttpServletResponse response) {
+        return DirInfoUtil.downLoad(filename, response);
     }
 }

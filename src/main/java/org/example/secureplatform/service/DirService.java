@@ -24,7 +24,7 @@ public abstract class DirService {
 
     public abstract ResponseResult<String> rename(DirRequest dirRequest) throws IOException;
 
-    public abstract ResponseResult<String> upload(DirRequest dirRequest, MultipartFile file) throws IOException;
+    public abstract ResponseResult<String> upload(String path, MultipartFile file) throws IOException;
 
-    public abstract ResponseResult<String> download(String filename, HttpServletResponse response);
+    public abstract HttpServletResponse download(String filename, HttpServletResponse response);
 }

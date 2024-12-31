@@ -1,5 +1,7 @@
 package org.example.secureplatform.config;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.example.secureplatform.common.security.CustomAccessDeniedHandler;
 import org.example.secureplatform.common.security.CustomizeAuthenticationFailureHandler;
 import org.example.secureplatform.common.JwtAuthenticationTokenFilter;
@@ -14,12 +16,16 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.io.IOException;
 
 @Configuration
 @EnableWebSecurity()
@@ -49,6 +55,7 @@ public class SecurityConfig {
     @Autowired
     CustomAccessDeniedHandler customAccessDeniedHandler;
 
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         CorsConfiguration corsConfig = new CorsConfiguration();
@@ -66,17 +73,9 @@ public class SecurityConfig {
                 .sessionManagement(sessionManagementConfigurer ->
                         sessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/login", "/register", "/system/**", "/public/**").permitAll() // 允许匿名访问
+                        .requestMatchers("/api/login", "/login").permitAll() // 允许匿名访问
                         .anyRequest()
                         .authenticated())// 其他路径都需要认证
-
-                .formLogin((form) -> form
-                        .loginPage("http://127.0.0.1:3000/login")
-                        .failureHandler(customizeAuthenticationFailureHandler)
-                        .permitAll()
-//                        .disable()
-//                        .successHandler(successHandler)
-                )
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .exceptionHandling(excrption -> {
                     excrption.authenticationEntryPoint(customizeAuthenticationEntryPoint);

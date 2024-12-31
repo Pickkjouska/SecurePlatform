@@ -6,10 +6,5 @@ import org.springframework.stereotype.Service;
 
 @Service
 public abstract class LoginServcie {
-
     public abstract ResponseResult login(User user);
-
-    public abstract ResponseResult logout();
-
-    public abstract ResponseResult register(User user);
 }

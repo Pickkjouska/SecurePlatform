@@ -14,16 +14,12 @@ public class LoginController {
     @Autowired
     private LoginServcie loginServcie;
 
-    @PostMapping("/login")
-    public ResponseResult login(@RequestBody User user){
-        System.out.println("user:" + user);
+    @PostMapping("/api/login")
+    private ResponseResult login(@RequestBody User user){
+        System.out.println(user);
         return loginServcie.login(user);
     }
-    @PostMapping("/register")
-    public ResponseResult register(@RequestBody User user){
-        System.out.println("user:" + user);
-        return loginServcie.register(user);
-    }
+
 }
 
 

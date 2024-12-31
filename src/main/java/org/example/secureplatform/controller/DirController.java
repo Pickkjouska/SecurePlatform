@@ -48,12 +48,13 @@ public class DirController {
     }
 
     @PostMapping("/upload")
-    public ResponseResult<String> upload(@RequestBody DirRequest dirRequest, MultipartFile file) throws IOException {
-        return dirService.upload(dirRequest, file);
+    public ResponseResult<String> upload(@RequestParam("path") String path,
+                                         @RequestParam("file") MultipartFile file) throws IOException {
+        return dirService.upload(path, file);
     }
 
     @GetMapping("/download")
-    public ResponseResult<String> download(@RequestParam String filename, HttpServletResponse response) {
+    public HttpServletResponse download(@RequestParam String filename, HttpServletResponse response) {
         return dirService.download(filename, response);
     }
 }

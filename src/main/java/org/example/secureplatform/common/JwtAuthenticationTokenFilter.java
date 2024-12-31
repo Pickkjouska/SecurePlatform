@@ -5,6 +5,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.example.secureplatform.common.util.InMemoryUserStorage;
 import org.example.secureplatform.common.util.JwtUtil;
 import org.example.secureplatform.entity.LoginUser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +30,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         //获取token
         String token = request.getHeader("Authorization");
-
+        System.out.println("前端的token信息=======>"+token);
 
         if (!StringUtils.hasText(token) || !token.startsWith("Bearer ")) {
             //放行
@@ -39,27 +40,25 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         //去掉 "Bearer " 前缀
         token = token.substring(7);
         //解析token
-        String userid;
+        String username;
         try {
             Claims claims = JwtUtil.parseJWT(token);
-            userid = claims.getSubject();
+            username = claims.getSubject();
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("token非法");
         }
-        //从redis中获取用户信息
-        String redisKey = "user" + userid;
-        System.out.println("JwtredisKey = " + redisKey);
-//        System.out.println(redisKey);
-        LoginUser loginUser = redisCache.getCacheObject(redisKey);
-        System.out.println("JwtloginUser = " + loginUser);
-        if(Objects.isNull(loginUser)){
+        if(!StringUtils.hasText(username)){
+            filterChain.doFilter(request,response);
+            return;
+        }
+        LoginUser loginUser = new LoginUser(InMemoryUserStorage.getUserPassword(username));
+        if (Objects.isNull(loginUser)) {
             throw new RuntimeException("用户未登录");
         }
         //存入SecurityContextHolder
         //TODO 获取权限信息封装到Authentication中
-        UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(loginUser,null,null);
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginUser, null,loginUser.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         //放行
         filterChain.doFilter(request, response);

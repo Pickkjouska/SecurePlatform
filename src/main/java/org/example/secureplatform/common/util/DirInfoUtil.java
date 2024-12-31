@@ -2,12 +2,13 @@ package org.example.secureplatform.common.util;
 
 import cn.hutool.core.io.FileUtil;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.example.secureplatform.entity.files.DirInfo;
 import org.example.secureplatform.entity.files.DirRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,6 +19,8 @@ import java.util.Objects;
 import java.util.Set;
 
 public class DirInfoUtil {
+    private static final Logger log = LogManager.getLogger(DirInfoUtil.class);
+
     public static String toOctalMode(Set<PosixFilePermission> permissions) {
         int padding = 0;
         int owner = 0;
@@ -67,7 +70,6 @@ public class DirInfoUtil {
             // Linux下获取文件组信息
             GroupPrincipal group = Files.readAttributes(dirpath, PosixFileAttributes.class).group();
             dirinfo.setGroup(group.getName());
-            dirinfo.setGroup("hhh");
             // 获取文件大小
             dirinfo.setSize(String.valueOf(Files.size(dirpath)));
             // 判断是否为符号链接
@@ -83,8 +85,6 @@ public class DirInfoUtil {
 //            权限等级
             PosixFileAttributes attrs = Files.readAttributes(dirpath, PosixFileAttributes.class);
             dirinfo.setMode(toOctalMode(attrs.permissions()));
-
-            dirinfo.setMode("0700");
             // 获取文件的最后修改时间
             dirinfo.setUpdateTime(Files.getLastModifiedTime(dirpath).toString());
             // 判断是否为文件夹
@@ -133,12 +133,19 @@ public class DirInfoUtil {
         } else {
             if (!Files.exists(dirpath)) {
                 // 创建空文件
-                Files.createFile(dirpath, fileAttributes);
                 if (Objects.equals(isLink, "true")) {
-                    Path target = Paths.get(dirRequest.getLinkPath());
-                    createLink(dirpath, target, dirRequest.getLinkType());
+                    try {
+                        Path target = Paths.get(dirRequest.getLinkPath());
+                        System.out.println(" dirpath" + dirpath + " target " + target + "type" + dirRequest.getLinkType());
+                        createLink(dirpath, target, dirRequest.getLinkType());
+                    } catch (Exception e) {
+                        log.error("e: ", e);
+                    }
+                    response = "链接文件已创建";
+                } else {
+                    Files.createFile(dirpath, fileAttributes);
+                    response = "文件已创建";
                 }
-                response = "文件已创建";
             } else {
                 response = "文件已经存在";
             }
@@ -203,21 +210,25 @@ public class DirInfoUtil {
     // 文件上传
     public static String uploadFile(String dirpath, MultipartFile file) throws IOException {
         String response = "上传成功";
-        // 文件的原始名称
-        String originalFilename = file.getOriginalFilename();
-        // 文件的主名称
-        String mainName = FileUtil.mainName(originalFilename);
-        // 文件的扩展名(后缀)
-        String extName = FileUtil.extName(originalFilename);
-        if (FileUtil.exist(dirpath + File.separator + originalFilename)){
-            originalFilename = System.currentTimeMillis() + "-" + mainName + "." + extName;
+        try {
+            // 文件的原始名称
+            String originalFilename = file.getOriginalFilename();
+            // 文件的主名称
+            String mainName = FileUtil.mainName(originalFilename);
+            // 文件的扩展名(后缀)
+            String extName = FileUtil.extName(originalFilename);
+            if (FileUtil.exist(dirpath + File.separator + originalFilename)){
+                originalFilename = System.currentTimeMillis() + "-" + mainName + "." + extName;
+            }
+            File saveFile = new File(dirpath + File.separator + originalFilename);
+            file.transferTo(saveFile);
+        } catch (Exception e) {
+            return "文件上传失败：" + e.getMessage();
         }
-        File saveFile = new File(dirpath + File.separator + originalFilename);
-        file.transferTo(saveFile);
         return response;
     }
 
-    public static String downLoad(String filename, HttpServletResponse response){
+    public static HttpServletResponse downLoad(String filename, HttpServletResponse response){
         File file = new File(filename);
         String extName = FileUtil.extName(file);
         if (!file.exists() || !file.isFile()) {
@@ -259,7 +270,7 @@ public class DirInfoUtil {
             // 如果发生异常，可以返回错误信息
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
-        return null;
+        return response;
     }
     public static String convertOctalToPosixPermission(String octalPermission) {
         // 验证传入的字符串是否为有效的八进制权限（3-4 位的数字，且只能包含0-7）
@@ -288,8 +299,11 @@ public class DirInfoUtil {
 //        Createfile(Path.of("D:/springproject/SecurePlatform/ddir"), "false");
 //        File file = Path.of("D:/springproject/SecurePlatform/ddir").toFile();
 //        DeleteDir(file);
-        Path dirpath = Paths.get("D:/springproject/SecurePlatform/text/asd.txt");
-        Path das = Paths.get("D:/springproject/SecurePlatform/text/xxxxx.txt");
-        createLink(dirpath, das, "SymbolicLink");
+//        Path dirpath = Paths.get("D:/springproject/SecurePlatform/text/asd.txt");
+//        Path das = Paths.get("D:/springproject/SecurePlatform/text/xxxxx.txt");
+//        createLink(dirpath, das, "SymbolicLink");
+        Set<PosixFilePermission> perms = PosixFilePermissions.fromString(convertOctalToPosixPermission("0755"));
+        FileAttribute<Set<PosixFilePermission>> fileAttributes = PosixFilePermissions.asFileAttribute(perms);
+        System.out.println(fileAttributes);
     }
 }
