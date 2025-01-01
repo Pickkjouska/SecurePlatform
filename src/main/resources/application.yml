@@ -10,6 +10,12 @@ spring:
     redis:
       host: localhost
       port: 6379
+  servlet:
+    multipart:
+      enabled: true #默认支持文件上传
+      max-file-size: -1 #不做限制
+      max-request-size: -1 #不做限制
+
 mybatis:
   #  mapper映射文件包扫描 (这里是对应 resources 的文件路径)
   mapper-locations: classpath:/mappers/*.xml

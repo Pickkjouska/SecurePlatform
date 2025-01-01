@@ -27,7 +27,6 @@ public class LoginServcieImpl extends LoginServcie {
     @Override
     public ResponseResult login(User user) {
         //创建了一个包含用户名和密码的 UsernamePasswordAuthenticationToken 对象。
-        System.out.println(user.getUsername() + user.getPassword());
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(user.getUsername(),user.getPassword());
         //使用 AuthenticationManager 的 authenticate 方法来验证传入的用户名和密码是否正确。
         Authentication authenticate = authenticationManager.authenticate(authenticationToken);

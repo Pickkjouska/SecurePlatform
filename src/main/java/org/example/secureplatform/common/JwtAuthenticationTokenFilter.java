@@ -39,7 +39,6 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         //去掉 "Bearer " 前缀
         token = token.substring(7);
         //解析token
-        System.out.println(token);
         String username;
         try {
             Claims claims = JwtUtil.parseJWT(token);

@@ -9,9 +9,6 @@ import java.util.Map;
 public class InMemoryUserStorage {
     private static final Map<String, User> userStore = new HashMap<>();
     // 添加用户
-    static {
-        addUser("pickk", BCrypt.hashpw("pickk", BCrypt.gensalt()));
-    }
 
     public static void addUser(String username, String password) {
         String encryptedPassword = BCrypt.hashpw(password, BCrypt.gensalt());

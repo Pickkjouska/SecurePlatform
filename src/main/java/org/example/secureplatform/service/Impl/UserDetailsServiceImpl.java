@@ -20,6 +20,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = InMemoryUserStorage.getUserPassword(username);
+        System.out.println(user);
         MyTUserDetail myTUserDetail=new MyTUserDetail();
         myTUserDetail.setUser(user);
         return myTUserDetail;
