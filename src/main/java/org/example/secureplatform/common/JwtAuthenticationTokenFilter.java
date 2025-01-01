@@ -30,7 +30,6 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         //获取token
         String token = request.getHeader("Authorization");
-        System.out.println("前端的token信息=======>"+token);
 
         if (!StringUtils.hasText(token) || !token.startsWith("Bearer ")) {
             //放行
@@ -40,6 +39,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         //去掉 "Bearer " 前缀
         token = token.substring(7);
         //解析token
+        System.out.println(token);
         String username;
         try {
             Claims claims = JwtUtil.parseJWT(token);
@@ -56,9 +56,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         if (Objects.isNull(loginUser)) {
             throw new RuntimeException("用户未登录");
         }
-        //存入SecurityContextHolder
-        //TODO 获取权限信息封装到Authentication中
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginUser, null,loginUser.getAuthorities());
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginUser, null,null);
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         //放行
         filterChain.doFilter(request, response);

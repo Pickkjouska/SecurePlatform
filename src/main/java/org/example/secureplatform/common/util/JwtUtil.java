@@ -15,8 +15,8 @@ import java.util.UUID;
  */
 public class JwtUtil {
 
-    // 有效期为一个小时
-    public static final Long JWT_TTL = 60 * 60 * 1000L;
+    // 有效期为24个小时
+    public static final Long JWT_TTL = 24 * 60 * 60 * 1000L;
     // 设置秘钥明文
     public static final String JWT_KEY = "PickkAtaraxiaPickkAtaraxiaPickkAtaraxiaPickkAtaraxia";
 
@@ -72,7 +72,8 @@ public class JwtUtil {
     }
 
     public static void main(String[] args) throws Exception {
-
+        String token = "eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiI5ZjAxNWVjOTJlNzM0MzA1YmU0NWExN2FhN2RlYzRjYyIsInN1YiI6ImFkbWluIiwiaXNzIjoiUGlja2siLCJpYXQiOjE3MzU3Mjg2MTEsImV4cCI6MTczNTgxNTAxMX0.ibMiPmr7X244E3HKEKMODSdnk-JASRn63dYcVzBixno";
+        System.out.println(parseJWT(token));
     }
 
     /**
