@@ -1,11 +1,9 @@
 package org.example.secureplatform.common.Runtime;
 import jakarta.annotation.PostConstruct;
+import org.springframework.data.redis.core.script.ScriptExecutor;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -28,6 +26,7 @@ public class DockerServiceConfig {
         } else {
             System.out.println("docker.service 已包含 -H tcp://0.0.0.0:2375，无需修改。");
         }
+        System.out.println("daozhelilea");
         String dockerCerts = generateDockerCerts();
         System.out.println(dockerCerts);
 
@@ -75,19 +74,20 @@ public class DockerServiceConfig {
         return false;
     }
     // 编写docker的TLS证书
-    private String generateDockerCerts() {
+    private String generateDockerCerts() throws IOException, InterruptedException{
         // 获取资源路径
         String scriptPath = getClass().getClassLoader().getResource("auto_gen_docker.sh").getPath();
-        // 设定解压路径
-        String targetPath = getClass().getClassLoader().getResource("certs").getPath();
+        String tempScriptPath = System.getProperty("java.io.tmpdir") + "/auto_gen_docker.sh";
+        extractScript(scriptPath, tempScriptPath);
+        // tar.
         // 给脚本设置可执行权限
         try {
-            Process chmodProcess = new ProcessBuilder("chmod", "+x", scriptPath).start();
+            Process chmodProcess = new ProcessBuilder("chmod", "a+x", tempScriptPath).start();
             chmodProcess.waitFor();
             System.out.println("Script permissions updated to executable.");
 
             // 执行脚本
-            Process process = new ProcessBuilder("/bin/bash", scriptPath).start();
+            Process process = new ProcessBuilder("/bin/bash", tempScriptPath).start();
             process.waitFor();
 
             // 输出脚本执行的结果
@@ -98,34 +98,27 @@ public class DockerServiceConfig {
                 }
             }
 
-            // 解压生成的证书文件到本地 resources 目录
-            extractCerts(targetPath);
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
         return "编写docker的TLS证书";
     }
-    private void extractCerts(String targetPath) {
-        // 解压目标 tar.gz 文件到 resources 下
-        File tarFile = new File(targetPath, "tls-client-certs-docker.tar.gz");
-        if (tarFile.exists()) {
-            try {
-                // 创建解压目录
-                Path targetDir = new File(targetPath).toPath();
-                if (!Files.exists(targetDir)) {
-                    Files.createDirectories(targetDir);
-                }
-
-                // 解压文件
-                Process unzipProcess = new ProcessBuilder("tar", "-xzvf", tarFile.getAbsolutePath(), "-C", targetPath).start();
-                unzipProcess.waitFor();
-
-                System.out.println("解压至: " + targetPath);
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
-            }
-        } else {
-            System.err.println("文件未找到: " + tarFile.getAbsolutePath());
+    // 从资源路径提取脚本到临时目录
+    private static void extractScript(String resourcePath, String targetPath) throws IOException {
+        InputStream inputStream = ScriptExecutor.class.getClassLoader().getResourceAsStream("auto_gen_docker.sh");
+        if (inputStream == null) {
+            throw new FileNotFoundException("脚本文件未找到！");
         }
+
+        File targetFile = new File(targetPath);
+        try (OutputStream outputStream = new FileOutputStream(targetFile)) {
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+        }
+
+        System.out.println("脚本已提取到临时目录: " + targetPath);
     }
 }

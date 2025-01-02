@@ -42,9 +42,13 @@ mkdir -p "tls-client-certs-$CODE"
 cp -f "ca-$CODE.pem" "cert-$CODE.pem" "key-$CODE.pem" "tls-client-certs-$CODE/"
 cd "tls-client-certs-$CODE"
 tar zcf "tls-client-certs-$CODE.tar.gz" *
-mv "tls-client-certs-$CODE.tar.gz" ../
+mkdir -p /home/user/certs
+mv "tls-client-certs-$CODE.tar.gz" /home/user/certs
 cd ..
 rm -rf "tls-client-certs-$CODE"
+cd /home/user/certs
+tar -xzvf "tls-client-certs-$CODE.tar.gz"
+rm "tls-client-certs-$CODE.tar.gz"
 # 拷贝服务端证书
 mkdir -p /etc/docker/certs.d
 cp "ca-$CODE.pem" "server-cert-$CODE.pem" "server-key-$CODE.pem" /etc/docker/certs.d/

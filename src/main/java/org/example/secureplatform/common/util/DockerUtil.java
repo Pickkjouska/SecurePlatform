@@ -78,15 +78,17 @@ public class DockerUtil {
         }
     }
     public static void main(String[] args) throws InterruptedException {
-        DockerUtil dockerUtil = new DockerUtil
-                .Builder()
-                //服务器ip
-                .withDockerHost("tcp://192.168.218.131:2375")
-                //API版本 可通过在服务器 docker version 命令查看
-                .withDockerApiVersion("1.41")
-                //安全连接密钥文件存放路径
-                .withDockerCertPath("/home/user/certs/")
-                .build();
-        System.out.println("docker的环境信息:========" + dockerUtil.DockerInfo());
+//        DockerUtil dockerUtil = new DockerUtil
+//                .Builder()
+//                //服务器ip
+//                .withDockerHost("tcp://192.168.218.131:2375")
+//                //API版本 可通过在服务器 docker version 命令查看
+//                .withDockerApiVersion("1.41")
+//                //安全连接密钥文件存放路径
+//                .withDockerCertPath("/home/user/certs/")
+//                .build();
+//        System.out.println("docker的环境信息:========" + dockerUtil.DockerInfo());
+        String scriptPath = DockerUtil.class.getClassLoader().getResource("auto_gen_docker.sh").getPath();
+        System.out.println(scriptPath);
     }
 }
