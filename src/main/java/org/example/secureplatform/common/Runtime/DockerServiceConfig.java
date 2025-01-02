@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 
 @Service
 public class DockerServiceConfig {
@@ -63,11 +65,14 @@ public class DockerServiceConfig {
     }
     // 检查 docker.service 是否已经包含 -H tcp://0.0.0.0:2375
     private boolean containsTcpOption(String dockerServicePath) throws IOException {
-        Process process = new ProcessBuilder("bash", "-c", "grep '-H tcp:\\/\\/0.0.0.0:2375' " + dockerServicePath).start();
-
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            return reader.readLine() != null; // 如果有输出，说明已包含该选项
+        List<String> lines = Files.readAllLines(Paths.get(dockerServicePath));
+        // 检查是否包含 -H tcp://0.0.0.0:2375
+        for (String line : lines) {
+            if (line.contains("-H tcp://0.0.0.0:2375")) {
+                return true;
+            }
         }
+        return false;
     }
     // 编写docker的TLS证书
     private String generateDockerCerts() {
