@@ -1,4 +1,4 @@
-package org.example.secureplatform.common;
+package org.example.secureplatform.common.Runtime;
 
 import org.example.secureplatform.common.util.InMemoryUserStorage;
 import org.springframework.boot.CommandLineRunner;
@@ -12,14 +12,16 @@ public class CommandLineStartupRunner implements CommandLineRunner {
         Scanner scanner = new Scanner(System.in);
 
         // 控制台输入用户名和密码
-        System.out.println("username:");
-        String username = scanner.nextLine();
+//        System.out.println("username:");
+//        String username = scanner.nextLine();
+//
+//        System.out.println("password:");
+//        String password = scanner.nextLine();
+//
+//        System.out.println("用户信息已保存！");
 
-        System.out.println("password:");
-        String password = scanner.nextLine();
-
-        System.out.println("用户信息已保存！");
-
+        String username = "admin";
+        String password = "admin";
         InMemoryUserStorage.addUser(username, password);
     }
 }

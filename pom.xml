@@ -136,6 +136,20 @@
 			<artifactId>hutool-all</artifactId>
 			<version>5.8.25</version>
 		</dependency>
+		<!-- docker java -->
+		<dependency>
+			<groupId>com.github.docker-java</groupId>
+			<artifactId>docker-java</artifactId>
+			<version>3.4.1</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/com.github.docker-java/docker-java-transport-httpclient5 -->
+		<dependency>
+			<groupId>com.github.docker-java</groupId>
+			<artifactId>docker-java-transport-okhttp</artifactId>
+			<version>3.4.1</version>
+		</dependency>
+
 
 
 	</dependencies>
