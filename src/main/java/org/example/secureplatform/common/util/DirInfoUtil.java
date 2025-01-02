@@ -295,7 +295,7 @@ public class DirInfoUtil {
 
     public static void main(String[] args) throws Exception {
 //        System.out.println(getDirInfo(Path.of("D:/springproject/SecurePlatform")));
-//        System.out.println(getFileInfo(Path.of("D:/springproject/SecurePlatform/text.txt")));
+//
 //        Createfile(Path.of("D:/springproject/SecurePlatform/ddir"), "false");
 //        File file = Path.of("D:/springproject/SecurePlatform/ddir").toFile();
 //        DeleteDir(file);

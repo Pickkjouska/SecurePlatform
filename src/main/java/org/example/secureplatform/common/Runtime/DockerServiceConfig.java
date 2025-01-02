@@ -20,15 +20,12 @@ public class DockerServiceConfig {
         System.out.println("找到 docker.service 文件路径: " + dockerServicePath);
         // 检查是否已包含 -H tcp://0.0.0.0:2375
         if (!containsTcpOption(dockerServicePath)) {
-            String addTcpOptionCommand = "sudo sed -i '/ExecStart=/s/$/ -H tcp:\\/\\/0.0.0.0:2375/' " + dockerServicePath;
+            String addTcpOptionCommand = "sudo sed -i '/ExecStart=/s/$/ -D --tlsverify=true --tlscert=\\/home\\/usr\\/certs\\/cert.pem --tlskey=\\/home\\/usr\\/certs\\/key.pem --tlscacert=\\/home\\/usr\\/certs\\/ca.pem -H tcp:\\/\\/0.0.0.0:2375/' " + dockerServicePath;
             runCommand(addTcpOptionCommand);
             System.out.println("已添加 -H tcp://0.0.0.0:2375 到 docker.service 配置中。");
         } else {
             System.out.println("docker.service 已包含 -H tcp://0.0.0.0:2375，无需修改。");
         }
-        System.out.println("daozhelilea");
-        String dockerCerts = generateDockerCerts();
-        System.out.println(dockerCerts);
 
         // 步骤 3: 重新加载 systemd 配置
         String reloadSystemdCommand = "sudo systemctl daemon-reload";
@@ -72,53 +69,5 @@ public class DockerServiceConfig {
             }
         }
         return false;
-    }
-    // 编写docker的TLS证书
-    private String generateDockerCerts() throws IOException, InterruptedException{
-        // 获取资源路径
-        String scriptPath = getClass().getClassLoader().getResource("auto_gen_docker.sh").getPath();
-        String tempScriptPath = System.getProperty("java.io.tmpdir") + "/auto_gen_docker.sh";
-        extractScript(scriptPath, tempScriptPath);
-        // tar.
-        // 给脚本设置可执行权限
-        try {
-            Process chmodProcess = new ProcessBuilder("chmod", "a+x", tempScriptPath).start();
-            chmodProcess.waitFor();
-            System.out.println("Script permissions updated to executable.");
-
-            // 执行脚本
-            Process process = new ProcessBuilder("/bin/bash", tempScriptPath).start();
-            process.waitFor();
-
-            // 输出脚本执行的结果
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    System.out.println(line);
-                }
-            }
-
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
-        return "编写docker的TLS证书";
-    }
-    // 从资源路径提取脚本到临时目录
-    private static void extractScript(String resourcePath, String targetPath) throws IOException {
-        InputStream inputStream = ScriptExecutor.class.getClassLoader().getResourceAsStream("auto_gen_docker.sh");
-        if (inputStream == null) {
-            throw new FileNotFoundException("脚本文件未找到！");
-        }
-
-        File targetFile = new File(targetPath);
-        try (OutputStream outputStream = new FileOutputStream(targetFile)) {
-            byte[] buffer = new byte[1024];
-            int bytesRead;
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
-            }
-        }
-
-        System.out.println("脚本已提取到临时目录: " + targetPath);
     }
 }
