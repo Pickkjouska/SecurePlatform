@@ -18,9 +18,16 @@ public class DockerServiceConfig {
             throw new RuntimeException("无法找到 docker.service 文件路径！");
         }
         System.out.println("找到 docker.service 文件路径: " + dockerServicePath);
+        // 检查是否已包含 -H tcp://0.0.0.0:2375
+        if (!containsTcpOption(dockerServicePath)) {
+            String addTcpOptionCommand = "sudo sed -i '/ExecStart=/s/$/ -H tcp:\\/\\/0.0.0.0:2375/' " + dockerServicePath;
+            runCommand(addTcpOptionCommand);
+            System.out.println("已添加 -H tcp://0.0.0.0:2375 到 docker.service 配置中。");
+        } else {
+            System.out.println("docker.service 已包含 -H tcp://0.0.0.0:2375，无需修改。");
+        }
 
-        String addTcpOptionCommand = "sudo sed -i '/ExecStart=/s/$/ -H tcp:\\/\\/0.0.0.0:2375/' " + dockerServicePath;
-        runCommand(addTcpOptionCommand);
+        generateDockerCerts();
 
         // 步骤 3: 重新加载 systemd 配置
         String reloadSystemdCommand = "sudo systemctl daemon-reload";
@@ -51,6 +58,14 @@ public class DockerServiceConfig {
         int exitCode = process.waitFor();
         if (exitCode != 0) {
             throw new RuntimeException("命令执行失败: " + command);
+        }
+    }
+    // 检查 docker.service 是否已经包含 -H tcp://0.0.0.0:2375
+    private boolean containsTcpOption(String dockerServicePath) throws IOException {
+        Process process = new ProcessBuilder("bash", "-c", "grep '-H tcp:\\/\\/0.0.0.0:2375' " + dockerServicePath).start();
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            return reader.readLine() != null; // 如果有输出，说明已包含该选项
         }
     }
     // 编写docker的TLS证书
