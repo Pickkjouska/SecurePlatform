@@ -26,8 +26,8 @@ public class DockerServiceConfig {
         } else {
             System.out.println("docker.service 已包含 -H tcp://0.0.0.0:2375，无需修改。");
         }
-
-        generateDockerCerts();
+        String dockerCerts = generateDockerCerts();
+        System.out.println(dockerCerts);
 
         // 步骤 3: 重新加载 systemd 配置
         String reloadSystemdCommand = "sudo systemctl daemon-reload";
@@ -43,7 +43,8 @@ public class DockerServiceConfig {
 
     // 使用 find 查找 docker.service 文件路径
     private String findDockerServicePath() throws IOException, InterruptedException {
-        String findCommand = "find / -name docker.service 2>/dev/null";
+        String findCommand = "find /lib/ -name docker.service 2>/dev/null";
+        System.out.println(findCommand);
         Process process = new ProcessBuilder("bash", "-c", findCommand).start();
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
@@ -69,7 +70,7 @@ public class DockerServiceConfig {
         }
     }
     // 编写docker的TLS证书
-    private void generateDockerCerts() {
+    private String generateDockerCerts() {
         // 获取资源路径
         String scriptPath = getClass().getClassLoader().getResource("auto_gen_docker.sh").getPath();
         // 设定解压路径
@@ -97,6 +98,7 @@ public class DockerServiceConfig {
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
+        return "编写docker的TLS证书";
     }
     private void extractCerts(String targetPath) {
         // 解压目标 tar.gz 文件到 resources 下
