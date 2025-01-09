@@ -8,6 +8,9 @@ public class DockerRequest {
     private String imageName;
     private String imageTag;
     private String containerName;
+    private String repository;
+    private String containerId;
+    private String path;
     private int hostPort;
     private int containerPort;
     private int page;
