@@ -48,4 +48,8 @@ public class ImagesController {
     public ResponseResult exportImage(@RequestBody DockerRequest dockerRequest) throws IOException, InterruptedException {
         return dockerService.exportImage(dockerRequest);
     }
+    @PostMapping("images/loadImage")
+    public ResponseResult loadImage(@RequestBody DockerRequest dockerRequest) throws IOException, InterruptedException {
+        return dockerService.loadImage(dockerRequest);
+    }
 }

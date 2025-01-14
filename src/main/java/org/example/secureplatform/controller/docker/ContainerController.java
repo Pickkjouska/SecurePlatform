@@ -4,10 +4,16 @@ import org.example.secureplatform.common.ResponseResult;
 import org.example.secureplatform.entity.dockers.DockerRequest;
 import org.example.secureplatform.service.DockerService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/docker")
@@ -38,4 +44,12 @@ public class ContainerController {
     public ResponseResult infoContainer(@RequestBody DockerRequest dockerRequest) {
         return dockerService.infoContainer(dockerRequest);
     }
+
+    @GetMapping("/container/log")
+    public SseEmitter logContainer(@RequestParam("containerId") String containerId,
+                                   @RequestParam(value = "timeFilter", required = false) String timeFilter,
+                                   @RequestParam(value = "limit", defaultValue = "100") int limit) {
+        return dockerService.getContainerLogs(containerId, timeFilter, limit);
+    }
+
 }

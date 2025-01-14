@@ -1,7 +1,7 @@
 package org.example.secureplatform.common.util;
 
-import cn.hutool.core.util.ObjectUtil;
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.*;
 import com.github.dockerjava.api.exception.ConflictException;
 import com.github.dockerjava.api.exception.NotFoundException;
@@ -9,23 +9,29 @@ import com.github.dockerjava.api.model.*;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
+import com.github.dockerjava.core.command.ExecStartResultCallback;
 import com.github.dockerjava.transport.DockerHttpClient;
 import com.github.dockerjava.okhttp.OkDockerHttpClient;
 import lombok.extern.slf4j.Slf4j;
-import org.example.secureplatform.common.ResponseResult;
-import org.example.secureplatform.entity.dockers.DockerRequest;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 @Slf4j
 public class DockerUtil {
     private static volatile DockerClient dockerClient;
-
+    private static final ExecutorService executor = Executors.newCachedThreadPool();
     private DockerUtil() {}
 
     private DockerUtil(String dockerHost, String dockerApiVersion, String dockerCertPath) {
@@ -189,18 +195,18 @@ public class DockerUtil {
     }
     /**
      * 导出 Docker 镜像为文件
-     * @param imageId 镜像 ID 或名称
+     * @param imageName 镜像 ID 或名称
      * @param outputPath 导出路径
      * @return 返回是否导出成功
      */
-    public static boolean exportImage(String imageId, String outputPath) {
-        if (imageId == null || imageId.isEmpty()) {
+    public static boolean exportImage(String imageName, String outputPath) {
+        if (imageName == null || imageName.isEmpty()) {
             throw new IllegalArgumentException("镜像 ID 不能为空.");
         }
 
         File outputFile = new File(outputPath);
         try (OutputStream outputStream = new FileOutputStream(outputFile);
-             InputStream inputStream = dockerClient.saveImageCmd(imageId).exec()) {
+             InputStream inputStream = dockerClient.saveImageCmd(imageName).exec()) {
 
             // 将镜像流写入文件
             byte[] buffer = new byte[8192];
@@ -215,6 +221,27 @@ public class DockerUtil {
 
         } catch (Exception e) {
             System.err.println("Docker 镜像导出失败: " + e.getMessage());
+            return false;
+        }
+    }
+    /**
+     * 从文件导入 Docker 镜像
+     * @param filePath 镜像文件路径（如 /path/to/image.tar）
+     * @return 返回是否导入成功
+     */
+    public static boolean loadImage(String filePath) {
+        File imageFile = new File(filePath);
+        if (!imageFile.exists() || !imageFile.isFile()) {
+            throw new IllegalArgumentException("镜像文件不存在或不是有效文件: " + filePath);
+        }
+
+        try (InputStream inputStream = new FileInputStream(imageFile)) {
+            LoadImageCmd loadImageCmd = dockerClient.loadImageCmd(inputStream);
+            loadImageCmd.exec();
+            System.out.println("Docker 镜像导入成功: " + filePath);
+            return true;
+        } catch (IOException e) {
+            System.err.println("Docker 镜像导入失败: " + e.getMessage());
             return false;
         }
     }
@@ -347,7 +374,83 @@ public class DockerUtil {
         }
         return null;
     }
-
+    /**
+     * 获取 Docker 容器日志
+     *
+     * @param containerId 容器 ID
+     * @return 容器日志内容
+     */
+    public static SseEmitter getContainerLogs(String containerId, String timeFilter, int limit) {
+        SseEmitter emitter = new SseEmitter();
+        executor.submit(() -> {
+            try {
+                LogContainerCmd logContainerCmd = dockerClient.logContainerCmd(containerId)
+                        .withStdOut(true)
+                        .withStdErr(true)
+                        .withTimestamps(true)
+                        .withFollowStream(false)
+                        .withTail(limit);
+                // 如果有时间过滤，添加相应的条件
+                if (timeFilter != null && !timeFilter.isEmpty()) {
+                    LocalDateTime timeLimit = parseTimeFilter(timeFilter);
+                    logContainerCmd.withSince(convertToUnixTimestamp(timeLimit));
+                }
+                logContainerCmd.exec(new ResultCallback.Adapter<Frame>() {
+                    @Override
+                    public void onNext(Frame frame) {
+                        try {
+                            // 将日志帧的内容推送给前端
+                            emitter.send(new String(frame.getPayload(), StandardCharsets.UTF_8));
+                        } catch (IOException e) {
+                            emitter.completeWithError(e);
+                        }
+                    }
+                    @Override
+                    public void onComplete() {
+                        emitter.complete();
+                    }
+                    @Override
+                    public void onError(Throwable throwable) {
+                        emitter.completeWithError(throwable);
+                    }
+                }).awaitCompletion();
+            } catch (Exception e) {
+                emitter.completeWithError(e);
+            }
+        });
+        return emitter;
+    }
+    /**
+     * 根据时间过滤条件解析时间
+     *
+     * @param timeFilter 时间过滤字符串
+     * @return 过滤时间的 LocalDateTime
+     */
+    private static LocalDateTime parseTimeFilter(String timeFilter) {
+        switch (timeFilter) {
+            case "tenDay":
+                return LocalDateTime.now().minusDays(10);
+            case "oneDay":
+                return LocalDateTime.now().minusDays(1);
+            case "4hour":
+                return LocalDateTime.now().minusHours(4);
+            case "1hour":
+                return LocalDateTime.now().minusHours(1);
+            case "10min":
+                return LocalDateTime.now().minusMinutes(10);
+            default:
+                return LocalDateTime.now().minusDays(10);  // 默认最近十天
+        }
+    }
+    /**
+     * 将 LocalDateTime 转换为 Unix 时间戳（秒）
+     *
+     * @param time 要转换的 LocalDateTime
+     * @return Unix 时间戳（秒）
+     */
+    private static int convertToUnixTimestamp(LocalDateTime time) {
+        return (int) time.atZone(java.time.ZoneId.systemDefault()).toEpochSecond();
+    }
     /**
      * 创建并启动 Docker 容器
      * @param imageName 镜像名称
@@ -400,6 +503,45 @@ public class DockerUtil {
     public static void removeContainer(String containerId) {
         dockerClient.removeContainerCmd(containerId).exec();
     }
+
+    // 创建 Exec 并启用 TTY 和 STDIN
+    public static ExecCreateCmdResponse createExec(String containerId, String[] command, boolean tty, boolean stdin) {
+        return dockerClient.execCreateCmd(containerId)
+                .withCmd(command)
+                .withTty(tty)
+                .withAttachStdin(stdin)
+                .withAttachStdout(true)
+                .withAttachStderr(true)
+                .exec();
+    }
+    // 连接到 Exec 输出流
+    public static void attachExec(String execId, WebSocketSession session) {
+        dockerClient.execStartCmd(execId).exec(new ResultCallback.Adapter<Frame>() {
+            @Override
+            public void onNext(Frame frame) {
+                // 将容器输出流中的内容转为字符串
+                String output = new String(frame.getPayload(), StandardCharsets.UTF_8);
+                try {
+                    session.sendMessage(new TextMessage(output));  // 将容器输出发送到 WebSocket 客户端
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                // 处理错误
+                throwable.printStackTrace();
+            }
+
+            @Override
+            public void onComplete() {
+                // 执行完成时的清理工作
+                System.out.println("Exec completed.");
+            }
+        });
+    }
+
     public static class Builder {
 
         private String dockerHost;
@@ -440,7 +582,5 @@ public class DockerUtil {
 //        createImage(imageName);
 //        createAndStartContainer(imageName, containerName, 80, 8080);
 //        removeUnusedImages();
-        System.out.println(listContainer());
-
     }
 }

@@ -1,5 +1,6 @@
 package org.example.secureplatform.service.Impl;
 
+import com.github.dockerjava.api.command.ExecCreateCmdResponse;
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.Image;
 import org.example.secureplatform.common.ResponseResult;
@@ -8,6 +9,8 @@ import org.example.secureplatform.entity.dockers.DockerImages;
 import org.example.secureplatform.entity.dockers.DockerRequest;
 import org.example.secureplatform.service.DockerService;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
 import java.util.List;
@@ -28,7 +31,6 @@ public class DockerServiceImpl extends DockerService {
     public ResponseResult<List<DockerImages>> SearchImages(Integer page, Integer pageSize) {
         List<Image> images = DockerUtil.listImages();
         List<Container> containers = DockerUtil.listContainer();
-        System.out.println(images);
         // 根据 page 和 pageSize 做分页处理
         if (images != null && !images.isEmpty()) {
             int start = (page - 1) * pageSize;
@@ -80,10 +82,18 @@ public class DockerServiceImpl extends DockerService {
     }
     @Override
     public ResponseResult exportImage(DockerRequest dockerRequest) {
-        if (DockerUtil.exportImage(dockerRequest.getImageTag(), dockerRequest.getPath())){
+        if (DockerUtil.exportImage(dockerRequest.getImageName(), dockerRequest.getPath())){
             return new ResponseResult<>(200, "导出成功");
         }else {
             return new ResponseResult<>(400, "导出失败");
+        }
+    }
+    @Override
+    public ResponseResult loadImage(DockerRequest dockerRequest) {
+        if (DockerUtil.loadImage(dockerRequest.getPath())) {
+            return new ResponseResult<>(200, "导入成功");
+        } else {
+            return new ResponseResult<>(400, "导入失败");
         }
     }
     @Override
@@ -111,7 +121,6 @@ public class DockerServiceImpl extends DockerService {
     }
 
     // Container
-
     @Override
     public ResponseResult createContainer(DockerRequest dockerRequest) {
         String imageName = dockerRequest.getImageName();
@@ -163,9 +172,19 @@ public class DockerServiceImpl extends DockerService {
     }
 
     @Override
+    public SseEmitter getContainerLogs(String containerId, String timeFilter, int limit) {
+        return DockerUtil.getContainerLogs(containerId, timeFilter, limit);
+    }
+    @Override
     public ResponseResult infoContainer (DockerRequest dockerRequest) {
         String containerId = dockerRequest.getContainerId();
         Container container = DockerUtil.infoContainer(containerId);
         return new ResponseResult<>(200, "获取成功", container);
+    }
+    @Override
+    public void executeAndSendLogsToFrontend(String containerId, String[] command, WebSocketSession session) {
+        ExecCreateCmdResponse execCreateCmdResponse = DockerUtil.createExec(containerId, command, true, false);
+        String execId = execCreateCmdResponse.getId();
+        DockerUtil.attachExec(execId, session);
     }
 }
