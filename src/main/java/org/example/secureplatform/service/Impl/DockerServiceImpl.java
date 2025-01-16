@@ -13,19 +13,26 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 
 @Service
 public class DockerServiceImpl extends DockerService {
+    String IP = InetAddress.getLocalHost().getHostAddress();
+    String DockerHost = "tcp://" + IP + ":2375";
     DockerUtil dockerUtil = new DockerUtil
             .Builder()
             //服务器ip
-            .withDockerHost("tcp://192.168.218.139:2375")
+            .withDockerHost(DockerHost)
             //API版本 可通过在服务器 docker version 命令查看
             .withDockerApiVersion("1.47")
             //安全连接密钥文件存放路径
 //                .withDockerCertPath("/home/usr/certs/")
             .build();
+
+    public DockerServiceImpl() throws UnknownHostException {
+    }
 
     @Override
     public ResponseResult<List<DockerImages>> SearchImages(Integer page, Integer pageSize) {

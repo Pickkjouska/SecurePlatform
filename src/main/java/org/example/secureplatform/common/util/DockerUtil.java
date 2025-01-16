@@ -18,6 +18,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -579,6 +580,8 @@ public class DockerUtil {
                 .build();
         String imageName = "nginx:latest";  // 使用 nginx 镜像
         String containerName = "my-nginx-container";
+        String IP = InetAddress.getLocalHost().getHostAddress();
+        System.out.println(IP);
 //        createImage(imageName);
 //        createAndStartContainer(imageName, containerName, 80, 8080);
 //        removeUnusedImages();

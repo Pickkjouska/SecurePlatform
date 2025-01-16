@@ -29,7 +29,6 @@ public class SystemInfoController {
     public ResponseResult<List<NetworkIF>> sad(){
         return new ResponseResult<>(200, "获取成功", SystemInfoUtil.getNetwork());
     }
-
     @GetMapping("/osruntime")
     public ResponseResult<OSRuntimeInfo> osruntime() throws InterruptedException { return systemInfoService.SystemRuntime(); }
 }
