@@ -19,20 +19,15 @@ import java.util.List;
 
 @Service
 public class DockerServiceImpl extends DockerService {
-    String IP = InetAddress.getLocalHost().getHostAddress();
-    String DockerHost = "tcp://" + IP + ":2375";
     DockerUtil dockerUtil = new DockerUtil
             .Builder()
             //服务器ip
-            .withDockerHost(DockerHost)
+            .withDockerHost("tcp://0.0.0.0:2375")
             //API版本 可通过在服务器 docker version 命令查看
-            .withDockerApiVersion("1.47")
+            .withDockerApiVersion("1.43")
             //安全连接密钥文件存放路径
 //                .withDockerCertPath("/home/usr/certs/")
             .build();
-
-    public DockerServiceImpl() throws UnknownHostException {
-    }
 
     @Override
     public ResponseResult<List<DockerImages>> SearchImages(Integer page, Integer pageSize) {
