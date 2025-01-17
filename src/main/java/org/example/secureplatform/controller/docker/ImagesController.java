@@ -11,44 +11,44 @@ import java.io.IOException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/docker")
+@RequestMapping("/docker/images")
 public class ImagesController {
     @Autowired
     DockerService dockerService;
-    @PostMapping("/images/search")
+    @PostMapping("/search")
     public ResponseResult<List<DockerImages>> searchImages(@RequestBody DockerRequest dockerRequest) {
         return dockerService.SearchImages(dockerRequest.getPage(), dockerRequest.getPageSize());
     }
-    @PostMapping("/images/info")
+    @PostMapping("/info")
     public ResponseResult infoImage() {
         return dockerService.infoImages();
     }
-    @PostMapping("/images/create")
+    @PostMapping("/create")
     public ResponseResult createImage(@RequestBody DockerRequest dockerRequest) throws IOException, InterruptedException {
         System.out.println(dockerRequest.getImageName());
         return dockerService.CreateImages(dockerRequest);
     }
-    @PostMapping("/images/remove")
+    @PostMapping("/remove")
     public ResponseResult removeImage(@RequestBody DockerRequest dockerRequest) throws IOException, InterruptedException {
         return dockerService.removeImage(dockerRequest);
     }
-    @PostMapping("/images/removeTag")
+    @PostMapping("/removeTag")
     public ResponseResult removeTag(@RequestBody DockerRequest dockerRequest) throws IOException, InterruptedException {
         return dockerService.removeImageTag(dockerRequest);
     }
-    @PostMapping("images/removeUnused")
+    @PostMapping("/removeUnused")
     public ResponseResult removeUnusedImages() throws IOException, InterruptedException {
         return dockerService.removeUnusedImages();
     }
-    @PostMapping("images/tagImage")
+    @PostMapping("/tagImage")
     public ResponseResult tagImage(@RequestBody DockerRequest dockerRequest) throws IOException, InterruptedException {
         return dockerService.tagImage(dockerRequest);
     }
-    @PostMapping("images/exportImage")
+    @PostMapping("/exportImage")
     public ResponseResult exportImage(@RequestBody DockerRequest dockerRequest) throws IOException, InterruptedException {
         return dockerService.exportImage(dockerRequest);
     }
-    @PostMapping("images/loadImage")
+    @PostMapping("/loadImage")
     public ResponseResult loadImage(@RequestBody DockerRequest dockerRequest) throws IOException, InterruptedException {
         return dockerService.loadImage(dockerRequest);
     }

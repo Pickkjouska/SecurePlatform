@@ -170,7 +170,6 @@ public class DirInfoUtil {
     public static void DeleteFile(File folder) throws IOException {
         folder.delete();
     }
-
     // 删除目录
     public static void DeleteDir(File folder) throws IOException {
         for (File file : Objects.requireNonNull(folder.listFiles())) {

@@ -1,11 +1,14 @@
 package org.example.secureplatform.service.Impl;
 
+import com.github.dockerjava.api.command.CreateNetworkResponse;
 import com.github.dockerjava.api.command.ExecCreateCmdResponse;
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.Image;
+import com.github.dockerjava.api.model.Network;
 import org.example.secureplatform.common.ResponseResult;
 import org.example.secureplatform.common.util.DockerUtil;
 import org.example.secureplatform.entity.dockers.DockerImages;
+import org.example.secureplatform.entity.dockers.DockerNetworks;
 import org.example.secureplatform.entity.dockers.DockerRequest;
 import org.example.secureplatform.service.DockerService;
 import org.springframework.stereotype.Service;
@@ -13,8 +16,6 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.List;
 
 @Service
@@ -22,7 +23,7 @@ public class DockerServiceImpl extends DockerService {
     DockerUtil dockerUtil = new DockerUtil
             .Builder()
             //服务器ip
-            .withDockerHost("tcp://0.0.0.0:2375")
+            .withDockerHost("tcp://192.168.218.139:2375")
             //API版本 可通过在服务器 docker version 命令查看
             .withDockerApiVersion("1.43")
             //安全连接密钥文件存放路径
@@ -188,5 +189,36 @@ public class DockerServiceImpl extends DockerService {
         ExecCreateCmdResponse execCreateCmdResponse = DockerUtil.createExec(containerId, command, true, false);
         String execId = execCreateCmdResponse.getId();
         DockerUtil.attachExec(execId, session);
+    }
+    @Override
+    public ResponseResult<List<Network>> NetWorks (Integer page, Integer pageSize) {
+        List<Network> networks = DockerUtil.getAllNetworks();
+        if (networks != null && !networks.isEmpty()) {
+            int start = (page - 1) * pageSize;
+            int end = Math.min(start + pageSize, networks.size());
+            List<Network> paginatedNetwork = networks.subList(start, end);
+            return new ResponseResult<>(200, "获取成功", paginatedNetwork);
+        }
+        return new ResponseResult<>(200, "获取成功", networks);
+    }
+    @Override
+    public ResponseResult<Network> getNetwork(DockerNetworks dockerNetworks) {
+        Network network = DockerUtil.getNetwork(dockerNetworks.getId());
+        return new ResponseResult<>(200, "获取成功", network);
+    }
+    @Override
+    public ResponseResult<CreateNetworkResponse> createNetwork(DockerNetworks dockerNetworks) {
+        String networkName = dockerNetworks.getName();
+        String driver = dockerNetworks.getDriver();
+        String subnet = dockerNetworks.getSubnet();
+        String gatway = dockerNetworks.getGateway();
+        CreateNetworkResponse createNetworkResponse =  DockerUtil.createNetwork(networkName, driver, subnet, gatway);
+        return new ResponseResult<CreateNetworkResponse>(200, "创建成功", createNetworkResponse);
+    }
+    @Override
+    public ResponseResult removenetwork(DockerNetworks dockerNetworks){
+        String id = dockerNetworks.getId();
+        DockerUtil.removeNetwork(id);
+        return new ResponseResult<>(200, "删除成功");
     }
 }

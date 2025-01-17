@@ -1,8 +1,9 @@
 package org.example.secureplatform.service;
 
-import com.github.dockerjava.api.command.ExecCreateCmdResponse;
+import com.github.dockerjava.api.model.Network;
 import org.example.secureplatform.common.ResponseResult;
 import org.example.secureplatform.entity.dockers.DockerImages;
+import org.example.secureplatform.entity.dockers.DockerNetworks;
 import org.example.secureplatform.entity.dockers.DockerRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -46,4 +47,12 @@ public abstract class DockerService {
     public abstract ResponseResult infoContainer(DockerRequest dockerRequest);
 
     public abstract void executeAndSendLogsToFrontend(String containerId, String[] command, WebSocketSession session);
+
+    public abstract ResponseResult<Network> getNetwork(DockerNetworks dockerNetworks);
+
+    public abstract ResponseResult<List<Network>> NetWorks(Integer page, Integer pageSize);
+
+    public abstract ResponseResult createNetwork(DockerNetworks dockerNetworks);
+
+    public abstract ResponseResult removenetwork(DockerNetworks dockerNetworks);
 }

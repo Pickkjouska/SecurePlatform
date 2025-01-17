@@ -9,7 +9,6 @@ import com.github.dockerjava.api.model.*;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
-import com.github.dockerjava.core.command.ExecStartResultCallback;
 import com.github.dockerjava.transport.DockerHttpClient;
 import com.github.dockerjava.okhttp.OkDockerHttpClient;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +17,6 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.*;
-import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -27,7 +25,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Consumer;
 
 @Slf4j
 public class DockerUtil {
@@ -139,7 +136,8 @@ public class DockerUtil {
             log.error("Docker 镜像删除失败，可能被其他资源引用: {}; 错误: {}", imageId, e.getMessage());
             return 403;
 
-        } catch (Exception e) {
+        }
+            catch (Exception e) {
             log.error("Docker 镜像删除失败: {}; 错误: {}", imageId, e.getMessage());
             return 500;
         }
@@ -155,8 +153,6 @@ public class DockerUtil {
         Objects.requireNonNull(repository, "镜像仓库名称不能为空.");
         Objects.requireNonNull(tag, "镜像标签不能为空.");
         String imageName = repository + ":" + tag;
-
-        log.info("开始删除 Docker 镜像标签: {}", imageName);
         try {
             // 检查是否有容器正在运行基于此镜像的实例
             if (isRunContainerByTag(imageName)) {
@@ -171,7 +167,8 @@ public class DockerUtil {
             log.error("Docker 镜像标签删除失败，可能被其他资源引用: {}; 错误: {}", imageName, e.getMessage());
             return 403;
 
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Docker 镜像标签删除失败: {}; 错误: {}", imageName, e.getMessage());
             return 500;
         }
@@ -250,21 +247,16 @@ public class DockerUtil {
      * 删除未使用的镜像
      */
     public static Integer removeUnusedImages() {
-        // 获取所有镜像
         ListImagesCmd listImagesCmd = dockerClient.listImagesCmd();
         List<Image> images = listImagesCmd.exec();
-
         for (Image image : images) {
             String[] repoTags = image.getRepoTags();
             if (repoTags == null) {
-                // 镜像可能没有标签，跳过
                 continue;
             }
             for (String imageName : repoTags) {
-                // 检查镜像是否有正在运行的容器使用
                 if (!isRunContainer(imageName)) {
                     try {
-                        // 删除未使用的镜像
                         dockerClient.removeImageCmd(imageName).exec();
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -346,7 +338,6 @@ public class DockerUtil {
             ListContainersCmd listContainersCmd = dockerClient.listContainersCmd();
             // 获取容器列表
             List<Container> containers = listContainersCmd.withShowAll(true).exec();
-
             // 打印每个容器的详细信息
             if (containers != null && !containers.isEmpty()) {
                 return containers;
@@ -391,7 +382,6 @@ public class DockerUtil {
                         .withTimestamps(true)
                         .withFollowStream(false)
                         .withTail(limit);
-                // 如果有时间过滤，添加相应的条件
                 if (timeFilter != null && !timeFilter.isEmpty()) {
                     LocalDateTime timeLimit = parseTimeFilter(timeFilter);
                     logContainerCmd.withSince(convertToUnixTimestamp(timeLimit));
@@ -400,7 +390,6 @@ public class DockerUtil {
                     @Override
                     public void onNext(Frame frame) {
                         try {
-                            // 将日志帧的内容推送给前端
                             emitter.send(new String(frame.getPayload(), StandardCharsets.UTF_8));
                         } catch (IOException e) {
                             emitter.completeWithError(e);
@@ -466,7 +455,7 @@ public class DockerUtil {
             ExposedPort tcp = ExposedPort.tcp(containerPort);
             // 创建容器
             Ports portBindings = new Ports();
-            portBindings.bind(tcp, Ports.Binding.bindPort(hostPort));
+            portBindings.bind(tcp, Ports.Binding.bindIpAndPort("0.0.0.0", hostPort));
             CreateContainerResponse containerResponse = dockerClient.createContainerCmd(name)
                     .withName(containerName) // 设置容器名称
                     .withHostConfig(HostConfig.newHostConfig()
@@ -504,7 +493,6 @@ public class DockerUtil {
     public static void removeContainer(String containerId) {
         dockerClient.removeContainerCmd(containerId).exec();
     }
-
     // 创建 Exec 并启用 TTY 和 STDIN
     public static ExecCreateCmdResponse createExec(String containerId, String[] command, boolean tty, boolean stdin) {
         return dockerClient.execCreateCmd(containerId)
@@ -528,13 +516,11 @@ public class DockerUtil {
                     e.printStackTrace();
                 }
             }
-
             @Override
             public void onError(Throwable throwable) {
                 // 处理错误
                 throwable.printStackTrace();
             }
-
             @Override
             public void onComplete() {
                 // 执行完成时的清理工作
@@ -543,6 +529,59 @@ public class DockerUtil {
         });
     }
 
+    /**
+     * 获取网络信息
+     *
+     */
+    public static List<Network> getAllNetworks() {
+        ListNetworksCmd listNetworksCmd = dockerClient.listNetworksCmd();
+        return listNetworksCmd.exec();
+    }
+
+    /**
+     * 获取网络具体信息
+     * @param networkId
+     */
+    public static Network getNetwork(String networkId) {
+        ListNetworksCmd listNetworksCmd = dockerClient.listNetworksCmd();
+        List<Network> networks = listNetworksCmd.exec();
+        for (Network network : networks) {
+            if (network.getId().equals(networkId)) {
+                return network;  // 返回找到的网络信息
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 创建网络
+     *
+     * @return
+     * @
+     */
+    public static CreateNetworkResponse createNetwork(String networkName, String driver, String subnet, String gateway) {
+        try {
+            Network.Ipam.Config ipamConfigs = new Network.Ipam.Config()
+                    .withSubnet(subnet)
+                    .withGateway(gateway);
+            Network.Ipam ipam = new Network.Ipam().withConfig(ipamConfigs);
+            CreateNetworkCmd createNetworkCmd = dockerClient.createNetworkCmd()
+                    .withName(networkName)
+                    .withDriver(driver)
+                    .withIpam(ipam);
+            return createNetworkCmd.exec();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * 删除网络
+     */
+    public static void removeNetwork(String networkId) {
+        dockerClient.removeNetworkCmd(networkId).exec();
+    }
     public static class Builder {
 
         private String dockerHost;
@@ -580,8 +619,8 @@ public class DockerUtil {
                 .build();
         String imageName = "nginx:latest";  // 使用 nginx 镜像
         String containerName = "my-nginx-container";
-        String IP = InetAddress.getLocalHost().getHostAddress();
-        System.out.println(IP);
+        System.out.println(getAllNetworks());
+        System.out.println(createNetwork("my_custom_network", "bridge", "192.168.1.0/24", "192.168.1.1"));
 //        createImage(imageName);
 //        createAndStartContainer(imageName, containerName, 80, 8080);
 //        removeUnusedImages();

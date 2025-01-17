@@ -14,7 +14,7 @@ import oshi.hardware.NetworkIF;
 import java.util.List;
 
 @RestController
-@RequestMapping("/public/system")
+@RequestMapping("/system")
 public class SystemInfoController {
 
     @Autowired
