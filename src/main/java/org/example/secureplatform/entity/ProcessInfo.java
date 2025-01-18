@@ -12,7 +12,5 @@ public class ProcessInfo {
     private String status;
     private String startTime;
     private String user;
-    private String threadCount;
-    private int connectionCount;
 
 }
