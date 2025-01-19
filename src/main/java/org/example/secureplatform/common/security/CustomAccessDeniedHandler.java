@@ -18,8 +18,6 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response,
                        AccessDeniedException accessDeniedException) throws IOException, ServletException {
-        // 在这里处理授权失败的情况
-
         ResponseResult result = new ResponseResult(HttpStatus.FORBIDDEN.value(), "权限不足");
         String json = JSON.toJSONString(result);
         response.setContentType("application/json");

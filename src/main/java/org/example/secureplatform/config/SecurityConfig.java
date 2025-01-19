@@ -63,17 +63,15 @@ public class SecurityConfig {
         corsConfig.addAllowedOriginPattern("*");
         corsConfig.addAllowedHeader("*");
         corsConfig.addAllowedMethod("*");
-
         UrlBasedCorsConfigurationSource corsConfigurationSource = new UrlBasedCorsConfigurationSource();
         corsConfigurationSource.registerCorsConfiguration("/**", corsConfig);
         http
                 // 禁用 CSRF 保护
                 .csrf(AbstractHttpConfigurer::disable)
-                // 不通过Session获取SecurityContext
                 .sessionManagement(sessionManagementConfigurer ->
                         sessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/login","/login" ,"/docker/**", "/database/**", "/process/**").permitAll() // 允许匿名访问
+                        .requestMatchers("/api/login").permitAll() // 允许匿名访问
                         .anyRequest()
                         .authenticated())// 其他路径都需要认证
                 .httpBasic(AbstractHttpConfigurer::disable)

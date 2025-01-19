@@ -186,11 +186,9 @@ public class DirInfoUtil {
     public static void SaveFile(Path dirpath, String content) throws IOException {
         try {
             Files.write(dirpath, content.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-            System.out.println("文件保存成功: " + dirpath);
         } catch (IOException e) {
-            // 处理写入文件时的异常
             System.err.println("保存文件时发生错误: " + e.getMessage());
-            throw e; // 可以选择重新抛出异常，或者处理它
+            throw e;
         }
     }
 

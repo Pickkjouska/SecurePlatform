@@ -46,14 +46,9 @@ public class ProcessServiceImpl extends ProcessService {
     @Override
     public ResponseResult delProcesses(int pid) throws IOException {
         try {
-            // 执行 kill 命令来终止指定的进程
             String command = String.format("kill -9 %d", pid);
             Process process = Runtime.getRuntime().exec(command);
-
-            // 等待命令执行完毕
             int exitCode = process.waitFor();
-
-            // 判断命令执行是否成功
             if (exitCode == 0) {
                 return new ResponseResult(200, "successful");
             } else {
@@ -75,7 +70,6 @@ public class ProcessServiceImpl extends ProcessService {
         while ((line = reader.readLine()) != null) {
             String[] details = line.trim().split("\\s+");
             System.out.println(Arrays.toString(details));
-            // 如果输出的行格式正确且字段数大于等于7
             if (details.length >= 7) {
                 try {
                     NetworkConnection connection = new NetworkConnection();

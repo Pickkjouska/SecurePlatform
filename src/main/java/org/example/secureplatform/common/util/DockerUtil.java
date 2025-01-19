@@ -619,8 +619,7 @@ public class DockerUtil {
                 .build();
         String imageName = "nginx:latest";  // 使用 nginx 镜像
         String containerName = "my-nginx-container";
-        System.out.println(getAllNetworks());
-        System.out.println(createNetwork("my_custom_network", "bridge", "192.168.1.0/24", "192.168.1.1"));
+        System.out.println(getNetwork("3acad3f1211025159a399399faa046e809ad3343962e2af14a9b475234d70085"));
 //        createImage(imageName);
 //        createAndStartContainer(imageName, containerName, 80, 8080);
 //        removeUnusedImages();

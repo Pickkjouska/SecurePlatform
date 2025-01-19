@@ -15,7 +15,6 @@ public abstract class DatabaseService {
 
     public abstract ResponseResult<List<String>> getAllUsers();
 
-    // 备份指定数据库的方法
     public abstract ResponseResult backupDatabase(String databaseName, String backupFilePath);
 
     public abstract ResponseResult importBackup(String databaseName, String backupFilePath);

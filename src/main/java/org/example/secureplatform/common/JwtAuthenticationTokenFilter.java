@@ -28,17 +28,12 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        //获取token
         String token = request.getHeader("Authorization");
-
         if (!StringUtils.hasText(token) || !token.startsWith("Bearer ")) {
-            //放行
             filterChain.doFilter(request, response);
             return;
         }
-        //去掉 "Bearer " 前缀
         token = token.substring(7);
-        //解析token
         String username;
         try {
             Claims claims = JwtUtil.parseJWT(token);
@@ -57,7 +52,6 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         }
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginUser, null,null);
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-        //放行
         filterChain.doFilter(request, response);
     }
 }

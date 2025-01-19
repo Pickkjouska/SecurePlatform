@@ -17,11 +17,8 @@ public class CustomizeAuthenticationFailureHandler implements AuthenticationFail
     @Override
     public void onAuthenticationFailure(HttpServletRequest httpServletRequest, HttpServletResponse response, AuthenticationException e) throws IOException {
         System.out.println("AuthenticationFailureHandlerImpl 登录认证失败时调用 ...");
-        //返回json数据
         ResponseResult result = new ResponseResult(HttpStatus.FORBIDDEN.value(), "登陆失败，请登录");
-        //处理编码方式，防止中文乱码的情况
         response.setContentType("text/json;charset=utf-8");
-        //塞到HttpServletResponse中返回给前台
         response.getWriter().write(JSON.toJSONString(result));
     }
 }
