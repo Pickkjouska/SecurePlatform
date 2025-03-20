@@ -1,7 +1,7 @@
 package org.example.secureplatform.controller;
 
 import org.example.secureplatform.common.ResponseResult;
-import org.example.secureplatform.entity.ConnectionRequest;
+import org.example.secureplatform.entity.DatabaseConnect;
 import org.example.secureplatform.service.DatabaseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -14,20 +14,16 @@ import java.util.Map;
 public class DatabaseController {
     @Autowired
     private DatabaseService databaseService;
-    @PostMapping("/connection")
-    public ResponseResult connection(@RequestBody ConnectionRequest connectionRequest) {
-        return databaseService.Connection(connectionRequest);
-    }
     @GetMapping("/database")
     public ResponseResult getDatabase() {
         return databaseService.getAllDatabases();
     }
-    @GetMapping("/user")
-    public ResponseResult getUser() {
-        return databaseService.getAllUsers();
+    @GetMapping("/users")
+    public ResponseResult<Map<String, List<Map<String, Object>>>> getMysqlUsers() {
+        return databaseService.getUsers();
     }
-    @PostMapping("/backup")
-    public ResponseResult backup(@RequestBody ConnectionRequest connectionRequest) {
-        return databaseService.backupDatabase(connectionRequest.getDatabaseName(), connectionRequest.getBackupFilePath());
+    @PostMapping("/connect")
+    public ResponseResult connect(@RequestBody DatabaseConnect databaseConnect) {
+        return databaseService.Connect(databaseConnect);
     }
 }

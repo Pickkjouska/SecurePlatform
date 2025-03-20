@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class DockerNetworks {
     private String Id;
+    private String networkId;
     private String Name;
     private String driver;
     private String subnet;

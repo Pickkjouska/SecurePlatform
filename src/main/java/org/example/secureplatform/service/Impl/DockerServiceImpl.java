@@ -203,7 +203,7 @@ public class DockerServiceImpl extends DockerService {
     }
     @Override
     public ResponseResult<Network> getNetwork(DockerNetworks dockerNetworks) {
-        Network network = DockerUtil.getNetwork(dockerNetworks.getId());
+        Network network = DockerUtil.getNetwork(dockerNetworks.getNetworkId());
         return new ResponseResult<>(200, "获取成功", network);
     }
     @Override

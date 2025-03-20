@@ -3,10 +3,10 @@ package org.example.secureplatform.entity;
 import lombok.Data;
 
 @Data
-public class ConnectionRequest {
-    private String url;
+public class DatabaseConnect {
+    private String host;
+    private String port;
     private String username;
     private String password;
     private String databaseName;
-    private String backupFilePath;
 }
